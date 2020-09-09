@@ -28,6 +28,16 @@ public class MovingToState : IPickerState
     {
         if (picker.target != null)
         {
+            //var currentBlockListCount = BlockInstantiator.instance.BlockList.Count;
+            //if (picker.lastBlockListCount != currentBlockListCount)
+            //{
+            //    picker.lastBlockListCount = currentBlockListCount;
+            //    if (picker.carryingBlock == null)
+            //    {
+            //        return picker.SetTargetState;
+            //    }
+            //}
+
             var distanceX = picker.target.position.x - picker.transform.position.x;
             if (Mathf.Abs(distanceX) <= 0.08f)
             {
@@ -73,7 +83,9 @@ public class PickUpState : IPickerState
 {
     public IPickerState DoState(PickerLogic picker)
     {
-        var objectToPickUp = picker.blocksInRange.Find(x => picker.target);
+        Debug.Log("Picking up");
+
+        var objectToPickUp = picker.blocksInRange.Find(x => x == picker.target.gameObject);
 
         picker.blocksInRange.Remove(objectToPickUp);
         objectToPickUp.SetActive(false);
@@ -106,7 +118,7 @@ public class SetTargetState : IPickerState
                 }
 
                 picker.target = closestBlock.transform;
-            }            
+            }
             else
             {
                 picker.target = picker.middlePos;

@@ -20,6 +20,7 @@ public class PickerLogic : MonoBehaviour
     public Transform depositBlue;
     public Transform depositRed;
     public Transform middlePos;
+    public int lastBlockListCount;
 
     public Vector2 movement; // 1 to -1
 
@@ -31,6 +32,7 @@ public class PickerLogic : MonoBehaviour
         rb = GetComponent<Rigidbody>();
 
         blocksInRange = new List<GameObject>();
+        lastBlockListCount = 0;
 
         currentState = IdleState;
     }
