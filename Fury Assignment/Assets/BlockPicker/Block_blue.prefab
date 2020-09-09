@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 6839145254379542764}
   - component: {fileID: 7942248641045946608}
   - component: {fileID: 8102325737467118511}
+  - component: {fileID: 5355585723025208434}
   m_Layer: 9
   m_Name: Block_blue
   m_TagString: Untagged
@@ -109,6 +110,19 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 48
   m_CollisionDetection: 0
+--- !u!114 &5355585723025208434
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4804885590414353452}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 083eb961181d5d8469676116b2f7df33, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  color: 0
 --- !u!1 &6110803843078525394
 GameObject:
   m_ObjectHideFlags: 0

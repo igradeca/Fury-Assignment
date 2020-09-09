@@ -6,7 +6,7 @@ TagManager:
   tags:
   - Block
   - Picker
-  - Target
+  - Deposit
   layers:
   - Default
   - TransparentFX

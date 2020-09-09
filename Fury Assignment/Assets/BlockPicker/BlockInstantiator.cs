@@ -13,8 +13,9 @@ public class BlockInstantiator : MonoBehaviour
     public GameObject BlockBlue;
     public GameObject BlockRed;
 
-    private int CounterBlue;
-    private int CounterRed;
+    public int CounterBlue;
+    public int CounterRed;
+    public List<GameObject> BlockList;
 
     private float instantiationTimer;
 
@@ -24,6 +25,7 @@ public class BlockInstantiator : MonoBehaviour
     void Start()
     {
         col = GetComponent<BoxCollider2D>();
+        BlockList = new List<GameObject>();
 
         if (instance == null)
         {
@@ -57,13 +59,14 @@ public class BlockInstantiator : MonoBehaviour
 
             if (block != null)
             {
-                Instantiate(block, position, Quaternion.identity);
+                var newBlock = Instantiate(block, position, Quaternion.identity);
+                BlockList.Add(newBlock);
                 instantiationTimer = 0f;
             }
         }
     }
 
-    public void InsertBlockIntoTarget(GameObject blockGO)
+    public void InsertBlockIntoDeposit(GameObject blockGO)
     {
         if (blockGO.GetComponent<Block>().color == BlockColour.Blue)
         {
@@ -74,8 +77,9 @@ public class BlockInstantiator : MonoBehaviour
             --CounterRed;
         }
 
-        Destroy(blockGO.transform.parent.gameObject);
-        Debug.Log("Destroyed block: " + blockGO.transform.parent.gameObject.name);
+        BlockList.Remove(blockGO);
+        Debug.Log("Destroyed block: " + blockGO.name);
+        Destroy(blockGO);
     }
 
 }
