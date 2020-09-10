@@ -11,6 +11,7 @@ public class PickerLogic : MonoBehaviour
     public IdleState IdleState = new IdleState();
     public MovingToState MovingToState = new MovingToState();
     public PickUpState PickUpState = new PickUpState();
+    public DepositState DepositState = new DepositState();
     public SetTargetState SetTargetState = new SetTargetState();
 
     public float Speed;

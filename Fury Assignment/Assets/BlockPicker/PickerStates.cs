@@ -26,72 +26,33 @@ public class MovingToState : IPickerState
 {
     public IPickerState DoState(PickerLogic picker)
     {
-        if (picker.target != null)
-        {
-            //var currentBlockListCount = BlockInstantiator.instance.BlockList.Count;
-            //if (picker.lastBlockListCount != currentBlockListCount)
-            //{
-            //    picker.lastBlockListCount = currentBlockListCount;
-            //    if (picker.carryingBlock == null)
-            //    {
-            //        return picker.SetTargetState;
-            //    }
-            //}
+        var distanceX = picker.target.position.x - picker.transform.position.x;
 
-            var distanceX = picker.target.position.x - picker.transform.position.x;
-            if (Mathf.Abs(distanceX) <= 0.08f)
+        if (Mathf.Abs(distanceX) <= 0.08f)
+        {
+            picker.movement = Vector2.zero;
+
+            if (picker.target == picker.middlePos)
             {
-                picker.movement = Vector2.zero;
-
-                var blockToPickUpInRange = picker.blocksInRange.Contains(picker.target.gameObject);                
-
-                if (blockToPickUpInRange)
-                {
-                    return picker.PickUpState;
-                }
-                else if (picker.target.tag == "Deposit")
-                {
-                    var targetColour = picker.target.GetComponent<Block>().color;
-                    if (targetColour == picker.carryingBlock.GetComponent<Block>().color)
-                    {
-                        BlockInstantiator.instance.InsertBlockIntoDeposit(picker.carryingBlock);
-                        picker.carryingBlock = null;
-                    }
-                }
-
-                picker.target = null;                
+                return picker.IdleState;
             }
-            else
+            else if (picker.blocksInRange.Contains(picker.target.gameObject))
             {
-                picker.movement = new Vector2(distanceX, 0f).normalized;
+                return picker.PickUpState;
             }
-
-            return picker.MovingToState;
+            else if (picker.target.tag == "Deposit" && picker.carryingBlock != null)
+            {
+                return picker.DepositState;
+            }
         }
-        else if (Mathf.Abs(picker.transform.position.x - picker.middlePos.transform.position.x) <= 0.08f)
+        else if (picker.carryingBlock == null && picker.lastBlockListCount != BlockInstantiator.instance.BlockList.Count)
         {
-            return picker.IdleState;
-        }
-        else
-        {
+            picker.lastBlockListCount = BlockInstantiator.instance.BlockList.Count;
             return picker.SetTargetState;
         }
-    }
-}
 
-public class PickUpState : IPickerState
-{
-    public IPickerState DoState(PickerLogic picker)
-    {
-        Debug.Log("Picking up");
-
-        var objectToPickUp = picker.blocksInRange.Find(x => x == picker.target.gameObject);
-
-        picker.blocksInRange.Remove(objectToPickUp);
-        objectToPickUp.SetActive(false);
-        picker.carryingBlock = objectToPickUp;
-
-        return picker.SetTargetState;
+        picker.movement = new Vector2(distanceX, 0f).normalized;
+        return picker.MovingToState;
     }
 }
 
@@ -99,12 +60,10 @@ public class SetTargetState : IPickerState
 {
     public IPickerState DoState(PickerLogic picker)
     {
-        // set new target location
         if (picker.carryingBlock == null)
         {
             if (BlockInstantiator.instance.BlockList.Count > 0)
             {
-                // get closest block
                 GameObject closestBlock = null;
                 var minDistance = float.MaxValue;
                 foreach (var block in BlockInstantiator.instance.BlockList)
@@ -131,6 +90,36 @@ public class SetTargetState : IPickerState
         }
 
         return picker.MovingToState;
+    }
+}
+
+public class PickUpState : IPickerState
+{
+    public IPickerState DoState(PickerLogic picker)
+    {
+        //Debug.Log("Picking up");
+        var objectToPickUp = picker.blocksInRange.Find(x => x == picker.target.gameObject);
+
+        picker.blocksInRange.Remove(objectToPickUp);
+        objectToPickUp.SetActive(false);
+        picker.carryingBlock = objectToPickUp;
+
+        return picker.SetTargetState;
+    }
+}
+
+public class DepositState : IPickerState
+{
+    public IPickerState DoState(PickerLogic picker)
+    {
+        var targetColour = picker.target.GetComponent<Block>().color;
+        if (targetColour == picker.carryingBlock.GetComponent<Block>().color)
+        {
+            BlockInstantiator.instance.InsertBlockIntoDeposit(picker.carryingBlock);
+            picker.carryingBlock = null;
+        }
+
+        return picker.SetTargetState;
     }
 }
 
