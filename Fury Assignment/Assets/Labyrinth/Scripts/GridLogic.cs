@@ -1,10 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Security.Cryptography.X509Certificates;
 using UnityEngine;
 
 public class GridLogic : MonoBehaviour
 {
+    public bool DebugMode = true;
+
     public GameObject gridElement;
     public Vector2Int gridSize;
     public float cellSize;
@@ -43,6 +44,11 @@ public class GridLogic : MonoBehaviour
                 tempPos.x += cellSize;
             }
         }
+
+        //if (DebugMode)
+        //{
+        //    debugGridStates = new List<Cell[][]>();
+        //}
 
         //for (int i = 0; i < gridSize.x; i++)
         //{
@@ -107,6 +113,14 @@ public class GridLogic : MonoBehaviour
             result.Add(grid[current.Location.x][current.Location.y + 1].data);
         }
 
+        for (int i = result.Count - 1; i >= 0; --i)
+        {
+            if (result[i].NotTraversable == true)
+            {
+                result.RemoveAt(i);
+            }
+        }
+
         return result;
     }
 
@@ -126,6 +140,38 @@ public class GridLogic : MonoBehaviour
         //    linePos.y += cellSize;
         //}
 
+        if (Input.GetKeyDown("left"))
+        {
+            if (AStarSolver.debugCurrentIndex > 0)
+            {
+                --AStarSolver.debugCurrentIndex;
+                debugGrid();
+            }
+        }
+        if (Input.GetKeyDown("right"))
+        {
+            if (AStarSolver.debugCurrentIndex < AStarSolver.debugGridStates.Count - 1)
+            {
+                ++AStarSolver.debugCurrentIndex;
+                debugGrid();
+            }
+        }
+
+        void debugGrid()
+        {
+            for (int i = 0; i < grid.Length; i++)
+            {
+                for (int j = 0; j < grid[i].Length; j++)
+                {
+                    var elem = grid[i][j];
+                    elem.data = AStarSolver.debugGridStates[AStarSolver.debugCurrentIndex][i][j];
+                    elem.debug.G.text = elem.data.G == int.MaxValue ? "" : elem.data.G.ToString();
+                    elem.debug.H.text = elem.data.H == -1 ? "" : elem.data.H.ToString();
+                    elem.debug.F.text = elem.data.F == -1 ? "" : elem.data.F.ToString();
+                }
+            }
+        }
+
         if (Input.GetMouseButtonDown(0))
         {
             setHitLocation(0);
@@ -133,6 +179,10 @@ public class GridLogic : MonoBehaviour
         else if (Input.GetMouseButtonDown(1))
         {
             setHitLocation(1);
+        }
+        else if (Input.GetMouseButtonDown(2))
+        {
+            setHitLocation(2);
         }
 
         void setHitLocation(int mouseClickIndex)
@@ -158,23 +208,50 @@ public class GridLogic : MonoBehaviour
                             {
                                 StartCell = cell;
                             }
-                            else
+                            else if (mouseClickIndex == 1)
                             {
                                 EndCell = cell;
                             }
-
-                            if (StartCell != null && EndCell != null)
+                            else
                             {
-                                var result = AStarSolver.Solve(grid, StartCell.data, EndCell.data);
-                                Debug.Log("Something");
+                                cell.data.NotTraversable = !cell.data.NotTraversable;
+                                var color = cell.data.NotTraversable ? Color.gray : Color.white;
+                                cell.GO.GetComponent<SpriteRenderer>().color = color;
 
                                 for (int k = 0; k < grid.Length; k++)
                                 {
                                     for (int m = 0; m < grid[0].Length; m++)
                                     {
-                                        var gridElem = grid[k][m];
-                                        var color = result.Contains(gridElem.data) ? Color.blue : Color.white;
-                                        gridElem.GO.GetComponent<SpriteRenderer>().color = color;
+                                        grid[k][m].data.Neighbours = getNeighbours(grid[k][m].data);
+                                    }
+                                }
+                            }
+
+                            if (mouseClickIndex != 2 && StartCell != null && EndCell != null)
+                            {
+                                var result = AStarSolver.Solve(grid, StartCell.data, EndCell.data);
+                                //Debug.Log("Something");
+
+                                for (int k = 0; k < grid.Length; k++)
+                                {
+                                    for (int m = 0; m < grid[0].Length; m++)
+                                    {
+                                        var elemData = grid[k][m].data;
+                                        var elemSpriteRenderer = grid[k][m].GO.GetComponent<SpriteRenderer>();
+
+                                        var color = grid[k][m].data.NotTraversable ? Color.gray : Color.white;
+                                        elemSpriteRenderer.color = color;                                        
+
+                                        color = result.Contains(elemData) ? Color.blue : Color.white;
+                                        if (color == Color.blue)
+                                        {
+                                            elemSpriteRenderer.color = color;
+
+                                            //if (elemSpriteRenderer.color  Color.white)
+                                            //{
+                                            //    Debug.LogError("Error at " + k + " " + m);
+                                            //}
+                                        }                                        
                                     }
                                 }
                             }
@@ -212,15 +289,15 @@ public class CellData
 
     public bool NotTraversable;
 
-    public int G = -1; // Element distance from starting node, diagonal 14, hor/vert 10 (left)
-    public int H = -1; // Heuristic distance from end node (right)
-    public int F = -1; // G + H
+    public int G = int.MaxValue;    // Element distance from starting node (left number)
+    public int H = -1;              // Heuristic distance from end node (right number)
+    public int F = -1;              // G + H
 
     public void ResetValues()
     {
         CameFrom = null;
 
-        G = -1;
+        G = int.MaxValue;
         H = -1;
         F = -1;
     }
@@ -230,11 +307,13 @@ public class Cell
 {
     public CellData data;
     public GameObject GO;
+    public ElementDebug debug;
 
     public Cell(GameObject go, Vector2Int location, bool notTraversable = false)
     {
         GO = go;
         data = new CellData { Location = location, NotTraversable = notTraversable };
+        debug = go.transform.GetChild(0).GetComponent<ElementDebug>();
     }
 }
 
@@ -246,11 +325,19 @@ public static class AStarSolver
     private const int DIAGONAL_COST = 14;
     private const int HORIZONTAL_OR_VERTICAL_COST = 10;
 
+    // debug stuff
+    public static List<CellData[][]> debugGridStates;
+    public static int debugCurrentIndex = -1;
+
     public static List<CellData> Solve(Cell[][] grid, CellData startLocation, CellData endLocation)
     {
-        Open = new List<CellData>() { startLocation }; // zeleni
-        Closed = new List<CellData>(); // crveni
+        Open = new List<CellData>() { startLocation }; // green
+        Closed = new List<CellData>(); // red
 
+        debugGridStates = new List<CellData[][]>();
+        debugCurrentIndex = 0;
+
+        // reset grid
         for (int i = 0; i < grid.Length; i++)
         {
             for (int j = 0; j < grid[0].Length; j++)
@@ -270,13 +357,13 @@ public static class AStarSolver
             // Kraj algoritma, nasli smo put
             if (current == endLocation)
             {
+                DebugSave(grid);
                 return GetPath(current);
             }
             
             Open.Remove(current);
             Closed.Add(current);
 
-            // Pogledaj svakog susjeda od current i izracunaj njegove vrijednosti
             foreach (var cell in current.Neighbours)
             {
                 if (Closed.Contains(cell)) {
@@ -288,8 +375,8 @@ public static class AStarSolver
                     continue;
                 }
 
-                var tempG = CalculateDistance(current.Location, cell.Location);
-                if (tempG < cell.G || cell.G == -1)
+                var tempG = current.G + CalculateDistance(current.Location, cell.Location);
+                if (tempG < cell.G)
                 {
                     cell.CameFrom = current;
                     cell.G = tempG;
@@ -303,6 +390,7 @@ public static class AStarSolver
                 }
             }
 
+            DebugSave(grid);
         }
 
         // Fail
@@ -352,4 +440,28 @@ public static class AStarSolver
         return result;
     }
 
+    public static void DebugSave(Cell[][] grid)
+    {
+        var newGridState = new CellData[grid.Length][];
+        for (int i = 0; i < grid.Length; i++)
+        {
+            newGridState[i] = new CellData[grid[i].Length];
+            for (int j = 0; j < grid[i].Length; j++)
+            {
+                var gridElem = grid[i][j];
+
+                var newElem = new CellData();
+                newElem.G = gridElem.data.G;
+                newElem.H = gridElem.data.H;
+                newElem.F = gridElem.data.F;
+
+                newGridState[i][j] = newElem;
+            }
+        }
+
+        debugGridStates.Add(newGridState);
+    }
+
 }
+
+

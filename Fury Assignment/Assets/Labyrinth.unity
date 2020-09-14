@@ -168,10 +168,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fc61b71225cc5da47b2a24a4bc4fdd1c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  DebugMode: 1
   gridElement: {fileID: 8254860187193976771, guid: c05dd5504fe96324d90d6f926926f61d,
     type: 3}
-  gridSize: {x: 10, y: 10}
-  cellSize: 0.7
+  gridSize: {x: 6, y: 11}
+  cellSize: 0.8
 --- !u!1 &380144270
 GameObject:
   m_ObjectHideFlags: 0
