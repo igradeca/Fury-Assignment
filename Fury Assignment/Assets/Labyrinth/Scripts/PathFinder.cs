@@ -14,53 +14,53 @@ public class PathFinder
         }
     }
 
-    public List<CellData> Open;
-    public List<CellData> Closed;
+    private List<CellData> open;
+    private List<CellData> closed;
 
     private const int DIAGONAL_COST = 14;
     private const int HORIZONTAL_OR_VERTICAL_COST = 10;
 
     // debug stuff
-    public List<CellData[][]> debugGridStates;
-    public int debugCurrentIndex = -1;
+    public List<CellData[][]> DebugGridSteps;
+    public int StepIndex = -1;
 
     // A* algorithm
     public List<CellData> Solve(CellData startLocation, CellData endLocation)
     {
-        Open = new List<CellData>() { startLocation }; // green
-        Closed = new List<CellData>();  // red
+        open = new List<CellData>() { startLocation }; // green
+        closed = new List<CellData>();  // red
 
-        debugGridStates = new List<CellData[][]>();
-        debugCurrentIndex = 0;
+        DebugGridSteps = new List<CellData[][]>();
+        StepIndex = 0;
 
         startLocation.G = 0;
         startLocation.H = CalculateDistance(startLocation.Location, endLocation.Location);
         startLocation.F = startLocation.G + startLocation.H;
 
-        while (Open.Count > 0)
+        while (open.Count > 0)
         {
             var current = GetSmallestFCell();
 
             // End of algorithm - path found
             if (current == endLocation)
             {
-                // debug 
+                // Debug 
                 //DebugSave(grid);
                 return GetPath(current);
             }
 
-            Open.Remove(current);
-            Closed.Add(current);
+            open.Remove(current);
+            closed.Add(current);
 
             foreach (var cell in current.Neighbours)
             {
-                if (Closed.Contains(cell))
+                if (closed.Contains(cell))
                 {
                     continue;
                 }
                 if (cell.NotTraversable)
                 {
-                    Closed.Add(cell);
+                    closed.Add(cell);
                     continue;
                 }
 
@@ -72,14 +72,14 @@ public class PathFinder
                     cell.H = CalculateDistance(cell.Location, endLocation.Location);
                     cell.F = cell.G + cell.H;
 
-                    if (!Open.Contains(cell))
+                    if (!open.Contains(cell))
                     {
-                        Open.Add(cell);
+                        open.Add(cell);
                     }
                 }
             }
 
-            // debug 
+            // Debug 
             //DebugSave(grid);
         }
 
@@ -129,9 +129,9 @@ public class PathFinder
 
     private CellData GetSmallestFCell()
     {
-        CellData result = Open[0];
+        CellData result = open[0];
 
-        foreach (var cell in Open)
+        foreach (var cell in open)
         {
             if (cell.F < result.F)
             {
@@ -161,7 +161,7 @@ public class PathFinder
             }
         }
 
-        debugGridStates.Add(newGridState);
+        DebugGridSteps.Add(newGridState);
     }
 
 }
